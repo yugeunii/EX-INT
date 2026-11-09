@@ -1,0 +1,15 @@
+{
+  "name": "EX-INT",
+  "short_name": "EX-INT",
+  "start_url": "/EX-INT/",
+  "scope": "/EX-INT/",
+  "display": "standalone",
+  "theme_color": "#6F9791",
+  "background_color": "#F5F7F6",
+  "icons": [
+    {
+      "src": "./icon.png",
+      "type": "image/png"
+    }
+  ]
+}
