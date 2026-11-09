@@ -1,0 +1,1357 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#6F9791">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="EX-INT">
+  <title>EX-INT | 운동 강도 분석</title>
+  <style>
+    :root {
+      --ink: #29302F;
+      --muted: #737C7A;
+      --line: #DCE3E1;
+      --teal: #6F9791;
+      --teal-dark: #527A74;
+      --teal-soft: #EEF4F2;
+      --paper: #FFFFFF;
+      --canvas: #F8FAF9;
+      --warning: #8B6E43;
+      --shadow: 0 12px 36px rgba(36, 57, 53, .07);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--canvas);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+        "Noto Sans KR", "Malgun Gothic", sans-serif;
+      line-height: 1.6;
+    }
+    button, input, select, textarea { font: inherit; }
+    button { cursor: pointer; }
+    .wrap { width: min(1080px, calc(100% - 36px)); margin: 0 auto; }
+
+    header {
+      background: rgba(255,255,255,.94);
+      border-bottom: 1px solid var(--line);
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      backdrop-filter: blur(12px);
+    }
+    .topbar {
+      min-height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+    .brand {
+      border: 0;
+      background: none;
+      color: var(--ink);
+      padding: 0;
+      text-align: left;
+      font-weight: 750;
+      font-size: 20px;
+      letter-spacing: .08em;
+    }
+    .brand small {
+      display: block;
+      font-weight: 400;
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: .13em;
+    }
+    nav { display: flex; gap: 6px; }
+    nav button {
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-size: 14px;
+    }
+    nav button:hover, nav button.active {
+      background: var(--teal-soft);
+      color: var(--teal-dark);
+    }
+
+    main { min-height: 72vh; padding: 42px 0 70px; }
+    .view { display: none; }
+    .view.active { display: block; }
+    .hero {
+      padding: 50px 0 44px;
+      display: grid;
+      grid-template-columns: 1.3fr .7fr;
+      align-items: center;
+      gap: 36px;
+    }
+    .eyebrow {
+      color: var(--teal-dark);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { font-size: clamp(34px, 5vw, 52px); line-height: 1.2; margin: 12px 0; }
+    h2 { font-size: 28px; line-height: 1.35; margin-bottom: 8px; }
+    h3 { font-size: 18px; margin-bottom: 8px; }
+    .lead { color: var(--muted); max-width: 610px; font-size: 16px; }
+    .hero-note {
+      border-left: 2px solid var(--teal);
+      padding: 8px 0 8px 20px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .hero-note strong { color: var(--ink); display: block; margin-bottom: 6px; }
+    .page-head { margin-bottom: 28px; }
+    .page-head p { color: var(--muted); margin-bottom: 0; }
+
+    .panel, .section-card {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    .panel { padding: 26px; }
+    .section-card { padding: 26px; margin: 18px 0; }
+    .panel + .panel { margin-top: 16px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .stack { display: grid; gap: 18px; }
+    .row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .between { justify-content: space-between; }
+    .muted { color: var(--muted); }
+    .small { font-size: 13px; }
+    .fine { font-size: 12px; color: var(--muted); }
+    .rule { border: 0; border-top: 1px solid var(--line); margin: 22px 0; }
+
+    .btn {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      min-height: 46px;
+      padding: 10px 18px;
+      border-radius: 13px;
+      border: 1px solid var(--line);
+      background: white;
+      color: var(--ink);
+      font-weight: 650;
+      text-decoration: none;
+    }
+    .btn:hover { border-color: var(--teal); background: var(--teal-soft); }
+    .btn.primary {
+      color: white;
+      background: var(--teal-dark);
+      border-color: var(--teal-dark);
+    }
+    .btn.primary:hover { background: #456D67; }
+    .btn.text { border-color: transparent; background: transparent; color: var(--teal-dark); }
+    .btn:disabled { opacity: .45; cursor: not-allowed; }
+
+    label.field { display: block; font-weight: 650; margin: 0 0 7px; }
+    input[type="text"], input[type="number"], select, textarea {
+      width: 100%;
+      color: var(--ink);
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px 13px;
+      outline: none;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--teal);
+      box-shadow: 0 0 0 3px rgba(111,151,145,.14);
+    }
+    textarea { resize: vertical; min-height: 90px; }
+    .unit-input { position: relative; }
+    .unit-input input { padding-right: 52px; }
+    .unit-input span {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .field-block { margin-bottom: 20px; }
+    .hint { color: var(--muted); font-size: 13px; margin: 5px 0 0; }
+
+    .choice-list { display: grid; gap: 9px; }
+    .choice {
+      display: flex;
+      gap: 11px;
+      align-items: flex-start;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      background: white;
+      transition: .15s ease;
+    }
+    .choice:hover { border-color: #A9C1BC; background: #FCFEFD; }
+    .choice:has(input:checked) {
+      border-color: var(--teal);
+      background: var(--teal-soft);
+    }
+    .choice input { margin-top: 5px; accent-color: var(--teal-dark); }
+    .choice span { font-weight: 500; }
+    .choice-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+
+    .age-row { display: flex; gap: 10px; align-items: center; }
+    .age-row input { max-width: 150px; }
+    .checkline { display: flex; align-items: flex-start; gap: 9px; color: var(--muted); font-size: 13px; margin-top: 10px; }
+    .checkline input { margin-top: 5px; accent-color: var(--teal-dark); }
+
+    .rpe-layout {
+      display: grid;
+      grid-template-columns: 100px 1fr;
+      gap: 24px;
+      align-items: center;
+      min-height: 300px;
+    }
+    .slider-box {
+      height: 280px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border-right: 1px solid var(--line);
+      padding-right: 20px;
+    }
+    input[type="range"].vertical {
+      writing-mode: vertical-lr;
+      direction: rtl;
+      width: 28px;
+      height: 250px;
+      accent-color: var(--teal-dark);
+      cursor: ns-resize;
+    }
+    .rpe-labels {
+      display: flex;
+      height: 270px;
+      flex-direction: column;
+      justify-content: space-between;
+      color: var(--muted);
+      font-size: 13px;
+      padding: 3px 0;
+    }
+    .rpe-current {
+      background: var(--teal-soft);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 17px;
+      margin-bottom: 12px;
+    }
+    .rpe-current strong { display: block; font-size: 20px; color: var(--teal-dark); }
+    .rpe-current p { margin: 4px 0 0; color: var(--muted); font-size: 14px; }
+
+    .notice {
+      border: 1px solid #E8E2D7;
+      background: #FBF9F5;
+      color: #78694F;
+      padding: 14px 16px;
+      border-radius: 13px;
+      font-size: 13px;
+    }
+    .result-banner {
+      background: var(--teal-soft);
+      border: 1px solid #D5E3DF;
+      border-radius: var(--radius);
+      padding: 25px;
+      margin: 20px 0;
+    }
+    .result-banner .result-word { font-size: 27px; font-weight: 750; color: var(--teal-dark); }
+    .metric {
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      padding: 17px;
+      min-height: 112px;
+    }
+    .metric span { display: block; color: var(--muted); font-size: 13px; }
+    .metric strong { display: block; font-size: 20px; margin-top: 5px; }
+    .report-section { padding: 20px 0; border-bottom: 1px solid var(--line); }
+    .report-section:last-child { border-bottom: 0; }
+    .tag {
+      display: inline-block;
+      padding: 4px 9px;
+      border-radius: 999px;
+      color: var(--teal-dark);
+      background: var(--teal-soft);
+      border: 1px solid #D5E3DF;
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    .calendar-head { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin: 20px 0; }
+    .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 7px; }
+    .day-name { text-align: center; color: var(--muted); font-size: 12px; padding: 7px; }
+    .day {
+      min-height: 92px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 8px;
+      background: white;
+      text-align: left;
+      color: var(--ink);
+    }
+    .day:hover:not(:disabled) { border-color: var(--teal); background: var(--teal-soft); }
+    .day:disabled { background: transparent; border-color: transparent; }
+    .day .num { font-size: 13px; }
+    .day .day-tag { display: block; margin-top: 10px; font-size: 10px; color: var(--teal-dark); }
+    .legend { display: flex; gap: 14px; flex-wrap: wrap; color: var(--muted); font-size: 12px; }
+
+    .empty {
+      border: 1px dashed #C9D5D2;
+      border-radius: 15px;
+      color: var(--muted);
+      padding: 28px;
+      text-align: center;
+      background: #FCFDFC;
+    }
+    .record-item {
+      width: 100%;
+      text-align: left;
+      padding: 16px;
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      color: var(--ink);
+    }
+    .record-item:hover { border-color: var(--teal); }
+    .record-item + .record-item { margin-top: 9px; }
+
+    footer {
+      background: white;
+      border-top: 1px solid var(--line);
+      padding: 24px 0 20px;
+      text-align: center;
+    }
+    footer .install-hint { color: var(--muted); font-size: 12px; margin: 0 0 9px; }
+    footer .credit { color: #A0AAA7; font-size: 11px; margin: 0; }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 24px;
+      transform: translateX(-50%);
+      z-index: 10;
+      display: none;
+      background: #29302F;
+      color: white;
+      padding: 11px 16px;
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      font-size: 14px;
+    }
+    .toast.show { display: block; }
+    .hidden { display: none !important; }
+
+    @media (max-width: 720px) {
+      .wrap { width: min(100% - 24px, 600px); }
+      .topbar { min-height: 62px; align-items: flex-start; padding: 12px 0 8px; flex-direction: column; gap: 7px; }
+      nav { width: 100%; overflow-x: auto; }
+      nav button { white-space: nowrap; padding: 8px 11px; font-size: 13px; }
+      main { padding: 25px 0 48px; }
+      .hero { grid-template-columns: 1fr; gap: 18px; padding: 26px 0 30px; }
+      .hero-note { margin-left: 3px; }
+      .grid-2, .grid-3, .choice-grid { grid-template-columns: 1fr; }
+      .panel, .section-card { padding: 19px; }
+      .rpe-layout { grid-template-columns: 76px 1fr; gap: 15px; }
+      .day { min-height: 72px; padding: 5px; }
+      .day .day-tag { font-size: 9px; }
+      .calendar-grid { gap: 4px; }
+
+    
+    }
+  
+  /* RPE 슬라이더: 가로 배치와 간격 정리 */
+.rpe-layout { display: block; }
+.slider-box { display: block; border-right: 0; padding-right: 0; margin: 10px 0 0; }
+input[type="range"].vertical { writing-mode: horizontal-tb; direction: ltr; width: 100%; height: 28px; accent-color: var(--teal-dark); cursor: pointer; touch-action: pan-y; }
+.rpe-labels { display: flex; flex-direction: row-reverse; justify-content: space-between; align-items: flex-start; gap: 4px; height: auto; padding: 0; margin-top: 2px; color: var(--muted); font-size: 12px; }
+.rpe-labels > span { flex: 1; text-align: center; line-height: 1.35; }
+.rpe-current { margin: 18px 0 0; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+
+.slider-box { height: auto !important; min-height: 0 !important; }
+.rpe-layout > div { min-height: 0; }
+.rpe-labels { margin-bottom: 0; }
+.rpe-current { margin-top: 12px; }
+
+
+.rpe-labels { display: block; position: relative; height: 20px; margin: 2px 11px 0; }
+.rpe-labels > span { position: absolute; top: 0; flex: none; transform: translateX(-50%); white-space: nowrap; }
+.rpe-labels > span:nth-child(1) { left: 100%; }
+.rpe-labels > span:nth-child(2) { left: 83.3333%; }
+.rpe-labels > span:nth-child(3) { left: 66.6667%; }
+.rpe-labels > span:nth-child(4) { left: 50%; }
+.rpe-labels > span:nth-child(5) { left: 33.3333%; }
+.rpe-labels > span:nth-child(6) { left: 16.6667%; }
+.rpe-labels > span:nth-child(7) { left: 0; }
+
+
+.hr-reference { margin-top: 14px; padding: 14px; border: 1px solid var(--line); border-radius: 12px; background: #F7FAF9; }
+.hr-reference-heading { font-size: 13px; font-weight: 600; margin-bottom: 9px; }
+.hr-zone-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.hr-zone { display: flex; flex-direction: column; gap: 5px; padding: 10px; border: 1px solid var(--line); border-radius: 9px; background: #fff; }
+.hr-zone span { color: var(--muted); font-size: 11px; }
+.hr-zone strong { color: var(--teal-dark); font-size: 14px; }
+@media (max-width: 720px) { .hr-zone-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+</style>
+</head>
+
+<body>
+  <header>
+    <div class="wrap topbar">
+      <button class="brand" data-view="home" aria-label="EX-INT 홈">
+        EX-INT
+        <small>CONTEXTUAL EXERCISE INTENSITY</small>
+      </button>
+      <nav aria-label="주 메뉴">
+        <button data-view="home" class="active">처음</button>
+        <button data-view="analysis">운동 분석</button>
+        <button data-view="records">운동 기록</button>
+        <button data-view="guide">지표 안내</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section id="home" class="view active">
+      <div class="hero">
+        <div>
+          <div class="eyebrow">Exercise intensity interpreter</div>
+          <h1>EX - INT</h1>
+          <p class="lead">
+            오늘 한 운동과 측정값을 기록하고, 직접 느낀 운동 강도와 비교해볼 수 있습니다
+            </p>    
+          <button class="btn primary" data-view="analysis">운동 분석 시작</button>
+        </div>
+        <div class="hero-note">
+          <strong>숫자 하나로 운동을 판단하지 않습니다.</strong>
+          측정값과 체감 강도는 서로 다른 운동 반응을 나타낼 수 있어요.
+          이 화면은 입력한 정보를 정리해 참고용으로 보여줍니다.
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="panel">
+  <div class="eyebrow">기록 저장</div>
+  <h3 style="margin-top:8px">내 기기에 저장됩니다</h3>
+  <p class="small muted">
+    운동 기록은 이 기기의 현재 브라우저에 저장돼요.
+    같은 브라우저에서 확인할 수 있으며, 다른 기기나 브라우저에서는 조회할 수 없습니다.
+  </p>
+</div>
+        <div class="panel">
+          <div class="eyebrow">빠른 이동</div>
+          <h3 style="margin-top:8px">최근 운동 기록</h3>
+          <div id="recentHome" class="small muted">아직 저장된 운동 기록이 없습니다.</div>
+          <button class="btn text" data-view="records" style="margin-top:8px">전체 기록 보기</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="analysis" class="view">
+      <div class="page-head">
+        <div class="eyebrow">01 / 운동 입력</div>
+        <h2>오늘의 운동을 기록해주세요.</h2>
+        <p>측정하지 않은 항목은 비워두거나 ‘측정하지 않았어요’를 선택할 수 있습니다.</p>
+      </div>
+
+      <form id="analysisForm">
+        <div class="section-card">
+          <h3>운동 정보</h3>
+          <div class="grid-2">
+            <div class="field-block">
+              <label class="field" for="exerciseType">운동 유형</label>
+              <select id="exerciseType" required>
+                <option value="">선택해주세요</option>
+                <option>유산소 운동</option>
+                <option>근력 운동</option>
+                <option>고강도 인터벌 운동</option>
+                <option>복합 운동</option>
+                <option>기타</option>
+              </select>
+            </div>
+            <div class="field-block">
+              <label class="field" for="purpose">운동 목적</label>
+              <select id="purpose" required>
+                <option value="">선택해주세요</option>
+                <option>심폐능력 향상</option>
+                <option>근력·근지구력 향상</option>
+                <option>체력 향상</option>
+                <option>건강 관리</option>
+                <option>기타</option>
+              </select>
+            </div>
+          </div>
+          <div class="field-block">
+            <label class="field" for="duration">운동 시간</label>
+            <div class="unit-input">
+              <input id="duration" type="number" min="1" max="600" placeholder="예: 45" required>
+              <span>분</span>
+            </div>
+          </div>
+          <div class="field-block" style="margin-bottom:0">
+            <label class="field" for="memo">오늘의 운동 메모 <span class="muted small">(선택)</span></label>
+            <textarea id="memo" maxlength="500" placeholder="예: 러닝머신 40분, 5분 워밍업 후 달리기"></textarea>
+          </div>
+        </div>
+
+        <div class="section-card">
+          <h3>측정값</h3>
+          <p class="hint" style="margin-bottom:18px">측정된 값을 입력해주세요. 측정하지 않은 항목은 체크할 수 있습니다.</p>
+          <div class="grid-2">
+            <div>
+              <div class="field-block">
+                <label class="field" for="heartRate">심박수</label>
+                <div class="unit-input">
+                  <input id="heartRate" type="number" min="30" max="240" placeholder="예: 152">
+                  <span>bpm</span>
+                </div>
+                <label class="checkline">
+                  <input id="noHeartRate" type="checkbox">
+                  <span>심박수를 측정하지 않았어요</span>
+                </label>
+              </div>
+              <div id="ageBox" class="field-block">
+                <label class="field" for="age">현재 연령 기준</label>
+                <div class="age-row">
+                  <input id="age" type="number" min="10" max="100" placeholder="나이">
+                  <span class="muted">세</span>
+                  <button id="editAge" type="button" class="btn">나이 수정</button>
+                </div>
+                <label class="checkline">
+                  <input id="saveAge" type="checkbox">
+                  <span>앞으로도 이 나이를 사용하기</span>
+                </label>
+                <p class="hint">심박수 기준을 참고할 때만 사용하며, 의학적 판정이 아닙니다.</p>
+              </div>
+            </div>
+            <div>
+              <div class="field-block">
+                <label class="field" for="vo2">산소섭취량(VO₂)</label>
+                <div class="unit-input">
+                  <input id="vo2" type="number" min="1" max="100" step="0.1" placeholder="예: 35.2">
+                  <span>ml/kg/min</span>
+                </div>
+                <label class="checkline">
+                  <input id="noVo2" type="checkbox">
+                  <span>산소섭취량을 측정하지 않았어요</span>
+                </label>
+              </div>
+              <div class="notice small">
+                측정 장비나 측정 조건에 따라 값이 달라질 수 있습니다.
+                본 결과는 입력한 값의 기록과 비교를 돕기 위한 참고 자료입니다.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-card">
+          <h3>운동 중 체감 강도</h3>
+          <p class="hint">정확한 숫자를 알 필요는 없습니다. 설명을 읽고 가장 가까운 정도를 선택해주세요.</p>
+          <div class="rpe-layout">
+            <div class="slider-box">
+              <input id="rpe" class="vertical" type="range" min="0" max="6" step="1" value="3" aria-label="운동 체감 강도">
+            </div>
+            <div>
+              <div class="rpe-labels">
+                <span>최대 노력</span><span>매우 힘듦</span><span>힘듦</span>
+                <span>다소 힘듦</span><span>보통</span><span>가벼움</span><span>매우 가벼움</span>
+              </div>
+              <div class="rpe-current" style="margin-top:16px">
+                <strong id="rpeTitle">보통</strong>
+                <p id="rpeDescription">큰 부담 없이 운동을 지속할 수 있는 정도입니다.</p>
+              </div>
+            </div>
+          </div>
+
+<div id="hrReference" class="hr-reference">
+<div class="eyebrow">연령 기준 심박수 참고</div>
+<div id="hrReferenceEmpty" class="small muted">나이를 입력하면 연령 기준 참고 범위를 표시합니다.</div>
+<div id="hrReferenceValues" class="hr-zone-grid hidden">
+<div class="hr-zone"><span>추정 최대심박수</span><strong id="hrMaxValue"></strong></div>
+<div class="hr-zone"><span>저강도 · 50% 미만</span><strong id="hrLowValue"></strong></div>
+<div class="hr-zone"><span>중강도 · 50–70%</span><strong id="hrModerateValue"></strong></div>
+<div class="hr-zone"><span>고강도 · 70–85%</span><strong id="hrHighValue"></strong></div>
+</div>
+<p class="small muted">추정 최대심박수는 220−나이로 계산한 참고치입니다. 개인차가 있으므로 실제 기록과 RPE를 각각 살펴보는 데 활용하세요.</p>
+</div>
+        
+<div id="vo2Reference" class="hr-reference" style="margin-top:12px">
+  <div class="eyebrow">산소섭취량 강도 참고</div>
+  <p id="vo2ReferenceEmpty" class="small muted">산소섭취량을 입력하면 MET 기준의 절대강도를 표시합니다.</p>
+  <div id="vo2ReferenceValues" class="hr-zone-grid hidden">
+    <div class="hr-zone"><span>가벼운 강도</span><strong>3 MET 미만 · 10.5 mL/kg/min 미만</strong></div>
+    <div class="hr-zone"><span>중강도</span><strong>3–5.9 MET · 10.5–20.9 mL/kg/min</strong></div>
+    <div class="hr-zone"><span>고강도</span><strong>6 MET 이상 · 21 mL/kg/min 이상</strong></div>
+  </div>
+  <p id="vo2Reading" class="small muted">입력한 산소섭취량은 개인의 최대 산소섭취량을 기준으로 한 상대 강도와 다를 수 있습니다.</p>
+</div>
+            </div>
+
+        <div class="section-card">
+          <h3>측정값과 체감 강도를 비교해보세요.</h3>
+          <p class="hint">운동 중 느낀 강도와 측정값이 어떤 관계였나요?</p>
+          <div class="choice-list" style="margin-top:16px">
+            <label class="choice"><input type="radio" name="comparison" value="비슷하게 느껴졌어요" required><span>비슷하게 느껴졌어요</span></label>
+            <label class="choice"><input type="radio" name="comparison" value="측정값보다 더 힘들게 느껴졌어요"><span>측정값보다 더 힘들게 느껴졌어요</span></label>
+            <label class="choice"><input type="radio" name="comparison" value="측정값보다 덜 힘들게 느껴졌어요"><span>측정값보다 덜 힘들게 느껴졌어요</span></label>
+          </div>
+
+          <div id="differenceBox" class="hidden" style="margin-top:22px">
+            <label class="field">오늘 운동에서 평소와 달랐던 점이 있었나요?</label>
+            <p class="hint">해당되는 항목을 모두 선택해주세요.</p>
+            <div id="factorChoices" class="choice-grid" style="margin-top:12px"></div>
+            <div id="otherBox" class="field-block hidden" style="margin-top:12px">
+              <label class="field" for="otherText">기타 내용을 적어주세요</label>
+              <input id="otherText" type="text" maxlength="200" placeholder="간단히 적어주세요">
+            </div>
+          </div>
+        </div>
+
+        <div class="row between">
+          <button type="button" class="btn" data-view="home">처음으로</button>
+          <button type="submit" class="btn primary">결과 확인 및 기록 저장</button>
+        </div>
+      </form>
+    </section>
+
+    <section id="report" class="view">
+      <div class="page-head">
+        <div class="eyebrow">02 / 운동 리포트</div>
+        <h2>오늘의 운동 기록</h2>
+        <p id="reportDate" class="muted"></p>
+      </div>
+      <div id="reportContent"></div>
+      <div class="row" style="margin-top:22px">
+        <button id="editRecord" class="btn">기록 수정</button>
+          <button id="deleteRecord" class="btn">기록 삭제</button>
+          <button class="btn primary" data-view="analysis">새 운동 분석</button>
+        <button class="btn" data-view="records">운동 기록 보기</button>
+      </div>
+    </section>
+
+    <section id="records" class="view">
+      <div class="page-head">
+        <div class="eyebrow">03 / 기록 모아보기</div>
+        <h2>운동 기록</h2>
+        <p>날짜를 선택하면 해당 운동 리포트를 다시 볼 수 있습니다.</p>
+      </div>
+      <div class="section-card">
+        <div class="calendar-head">
+          <button id="prevMonth" class="btn" aria-label="이전 달">이전 달</button>
+          <h3 id="monthLabel" style="margin:0"></h3>
+          <button id="nextMonth" class="btn" aria-label="다음 달">다음 달</button>
+        </div>
+        <div class="calendar-grid" id="calendar"></div>
+        <div class="legend" style="margin-top:16px">
+          <span><span class="tag">유사</span> 비슷하게 느꼈어요</span>
+          <span><span class="tag">차이</span> 더 힘들거나 덜 힘들게 느꼈어요</span>
+        </div>
+      </div>
+      <div class="section-card">
+        <h3>최근 기록</h3>
+        <div id="recordList"></div>
+      </div>
+    </section>
+
+    <section id="guide" class="view">
+      <div class="page-head">
+        <div class="eyebrow">04 / 지표 안내</div>
+        <h2>운동 강도 지표 알아보기</h2>
+        <p>각 지표가 나타내는 정보는 서로 다를 수 있습니다.</p>
+      </div>
+      <div class="stack">
+        <article class="panel">
+          <h3>심박수(HR)</h3>
+          <p class="muted">심장이 1분 동안 뛰는 횟수입니다. 운동 중 심혈관계 반응을 살펴보는 데 활용됩니다. 운동 유형, 환경, 컨디션 등에 따라 달라질 수 있습니다.</p>
+        </article>
+        <article class="panel">
+          <h3>산소섭취량(VO₂)</h3>
+          <p class="muted">운동 중 몸이 산소를 사용하는 정도를 나타내는 지표입니다. 측정 방법과 장비에 따라 해석에 주의가 필요합니다.</p>
+        </article>
+        <article class="panel">
+          <h3>자각운동강도(RPE)</h3>
+          <p class="muted">운동하는 사람이 직접 느낀 호흡과 신체적 부담을 기록합니다. 이 시제품은 선택한 표현을 내부적으로 Borg 6–20 값에 대응해 저장합니다.</p>
+        </article>
+        <article class="panel">
+          <h3>지표를 함께 보는 이유</h3>
+          <p class="muted">측정값과 체감 강도는 같은 대상을 똑같이 나타내지 않을 수 있습니다. 운동 유형과 목적, 개인의 컨디션을 함께 고려해 기록을 살펴보세요.</p>
+        </article>
+        <div class="notice">
+          이 웹앱은 교육·기록용 시제품이며 의료적 평가나 운동 처방을 제공하지 않습니다.
+          불편감이나 건강 문제가 있으면 전문가와 상담해주세요.
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p class="install-hint">홈 화면에 추가하면 앱처럼 더 편리하게 사용할 수 있어요.</p>
+    <p class="install-hint">
+  iPhone: Safari에서 공유 버튼 → 홈 화면에 추가<br>
+  Galaxy: Chrome 메뉴(⋮) → 앱 설치 또는 홈 화면에 추가<br>
+  Samsung Internet: 메뉴(≡) → 페이지 추가 → 홈 화면
+</p>
+    <p class="credit">제작 : 영남대학교 생활과학대학 체육학부 장규은</p>
+  </footer>
+  <div id="toast" class="toast" role="status"></div>
+
+  <script>
+    const rpeLevels = [
+      { label: "매우 가벼움", borg: 6, description: "편안하고 부담 없이 움직일 수 있는 정도입니다." },
+      { label: "가벼움", borg: 8, description: "호흡과 신체 부담이 크지 않아 편안하게 운동할 수 있습니다." },
+      { label: "보통", borg: 10, description: "큰 부담 없이 운동을 지속할 수 있는 정도입니다." },
+      { label: "다소 힘듦", borg: 12, description: "호흡이 빨라지고 운동 부담이 느껴지지만 계속할 수 있습니다." },
+      { label: "힘듦", borg: 14, description: "숨이 차고 운동에 집중해야 하는 정도입니다." },
+      { label: "매우 힘듦", borg: 17, description: "상당히 힘들어 오래 지속하기 어렵게 느껴집니다." },
+      { label: "최대 노력", borg: 20, description: "거의 최대 수준의 노력으로 느껴지는 정도입니다." }
+    ];
+
+    const factorOptions = {
+      "측정값보다 더 힘들게 느껴졌어요": [
+        "운동 후반부라 피로가 누적됐어요",
+        "특정 근육이 많이 피로했어요",
+        "근력 운동이었어요",
+        "고강도 인터벌 운동이었어요",
+        "운동 시간이 길었어요",
+        "더운 환경에서 운동했어요",
+        "수분 섭취가 부족했어요",
+        "평소보다 몸이 무거웠어요",
+        "기타",
+        "특별히 달랐던 점은 없었어요"
+      ],
+      "측정값보다 덜 힘들게 느껴졌어요": [
+        "잠을 충분히 잤어요",
+        "식사를 충분히 했어요",
+        "운동 전에 충분히 쉬었어요",
+        "평소보다 컨디션이 좋았어요",
+        "이 운동에 익숙한 상태였어요",
+        "운동 중 충분히 쉬었어요",
+        "운동 강도를 스스로 조절했어요",
+        "음악이나 주변 환경의 도움을 받았어요",
+        "주변 사람의 응원이나 격려가 있었어요",
+        "기타",
+        "특별히 달랐던 점은 없었어요"
+      ]
+    };
+
+    const storePrefix = "exint_records_";
+    const currentCodeKey = "exint_current_code";
+    let currentCode = localStorage.getItem(currentCodeKey) || "";
+    let activeRecord = null;
+    let editingRecordId = null;
+    let monthCursor = new Date();
+    monthCursor.setDate(1);
+
+    const $ = (selector, root = document) => root.querySelector(selector);
+    const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
+
+    function escapeHTML(value) {
+      return String(value ?? "").replace(/[&<>"']/g, char => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      }[char]));
+    }
+    function recordsKey() { return storePrefix + (currentCode || "guest"); }
+function createAnalysisSnapshot(record) {
+  return { version: 1, interpretation: interpretRecord(record) };
+}
+
+    function getRecords() {
+      try {
+      const records = JSON.parse(localStorage.getItem(recordsKey()) || "[]");
+      if (!Array.isArray(records)) return [];
+      let changed = false;
+      records.forEach(record => {
+        if (!record.analysisSnapshot) {
+          record.analysisSnapshot = createAnalysisSnapshot(record);
+          changed = true;
+        }
+      });
+      if (changed) setRecords(records);
+      return records;
+    }
+      catch { return []; }
+    }
+    function setRecords(records) {
+      localStorage.setItem(recordsKey(), JSON.stringify(records));
+    }
+    function showToast(message) {
+      const toast = $("#toast");
+      toast.textContent = message;
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 2600);
+    }
+    function go(view) {
+      $$(".view").forEach(section => section.classList.toggle("active", section.id === view));
+      $$("nav button[data-view]").forEach(button => button.classList.toggle("active", button.dataset.view === view));
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      if (view === "records") renderRecords();
+      if (view === "home") renderHome();
+    }
+
+    document.addEventListener("click", event => {
+      const button = event.target.closest("[data-view]");
+      if (button) {
+        if (button.dataset.view === "analysis") {
+          editingRecordId = null;
+          $("#analysisForm button[type=submit]").textContent = "결과 확인 및 기록 저장";
+        }
+        go(button.dataset.view);
+      }
+    });
+
+    function updateCodeStatus() {
+      $("#codeInput").value = currentCode;
+      $("#codeStatus").textContent = currentCode
+        ? "현재 " + currentCode + " 코드의 기록을 보고 있어요."
+        : "코드 없이도 이 브라우저에서 시제품을 둘러볼 수 있습니다.";
+    }
+
+    $("#rpe").addEventListener("input", event => {
+      const level = rpeLevels[Number(event.target.value)];
+      $("#rpeTitle").textContent = level.label;
+      $("#rpeDescription").textContent = level.description;
+    });
+
+    $("#noHeartRate").addEventListener("change", event => {
+      $("#heartRate").disabled = event.target.checked;
+      if (event.target.checked) $("#heartRate").value = "";
+    });
+    $("#noVo2").addEventListener("change", event => {
+      $("#vo2").disabled = event.target.checked;
+      if (event.target.checked) $("#vo2").value = "";
+    });
+    $("#editAge").addEventListener("click", () => {
+      $("#age").focus();
+      $("#age").select();
+    });
+
+    document.addEventListener("change", event => {
+      if (event.target.name === "comparison") {
+        const choice = event.target.value;
+        $("#differenceBox").classList.toggle("hidden", choice === "비슷하게 느껴졌어요");
+        renderFactorChoices(choice);
+      }
+      if (event.target.name === "factor") {
+        const selected = $$('input[name="factor"]:checked').map(input => input.value);
+        const noDifference = "특별히 달랐던 점은 없었어요";
+        const hasNoDifference = selected.includes(noDifference);
+        const hasOther = selected.includes("기타");
+        if (hasNoDifference) {
+          $$('input[name="factor"]').forEach(input => {
+            if (input.value !== noDifference) input.checked = false;
+          });
+        } else if (event.target.value !== noDifference) {
+          const none = $('input[name="factor"][value="' + noDifference + '"]');
+          if (none) none.checked = false;
+        }
+        if (hasOther && event.target.checked) $("#otherText").focus();
+        $("#otherBox").classList.toggle("hidden", !selected.includes("기타"));
+      }
+    });
+
+    function renderFactorChoices(comparison) {
+      const options = factorOptions[comparison] || [];
+      $("#factorChoices").innerHTML = options.map((text, index) => {
+        const id = "factor-" + index;
+        return '<label class="choice" for="' + id + '">' +
+          '<input id="' + id + '" type="checkbox" name="factor" value="' + escapeHTML(text) + '">' +
+          '<span>' + escapeHTML(text) + '</span></label>';
+      }).join("");
+      $("#otherBox").classList.add("hidden");
+      $("#otherText").value = "";
+    }
+
+    function formatDate(dateString) {
+      const date = new Date(dateString + "T12:00:00");
+      return new Intl.DateTimeFormat("ko-KR", {
+        year: "numeric", month: "long", day: "numeric", weekday: "long"
+      }).format(date);
+    }
+    function collectForm() {
+      const comparison = $('input[name="comparison"]:checked')?.value || "";
+      const factors = $$('input[name="factor"]:checked').map(input => input.value);
+      const other = $("#otherText").value.trim();
+      const cleanFactors = factors.filter(item => item !== "기타");
+      if (factors.includes("기타") && other) cleanFactors.push("기타: " + other);
+      const ageValue = $("#age").value ? Number($("#age").value) : null;
+      if ($("#saveAge").checked && ageValue) {
+        localStorage.setItem("exint_saved_age_" + (currentCode || "guest"), String(ageValue));
+      }
+      const rpe = rpeLevels[Number($("#rpe").value)];
+      return {
+        id: (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())),
+        date: new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10),
+        exerciseType: $("#exerciseType").value,
+        purpose: $("#purpose").value,
+        duration: Number($("#duration").value),
+        memo: $("#memo").value.trim(),
+        heartRate: $("#noHeartRate").checked ? null : ($("#heartRate").value ? Number($("#heartRate").value) : null),
+        noHeartRate: $("#noHeartRate").checked,
+        vo2: $("#noVo2").checked ? null : ($("#vo2").value ? Number($("#vo2").value) : null),
+        noVo2: $("#noVo2").checked,
+        age: ageValue,
+        rpeLabel: rpe.label,
+        borg: rpe.borg,
+        comparison,
+        factors: comparison === "비슷하게 느껴졌어요" ? [] : cleanFactors
+      };
+    }
+
+    $("#analysisForm").addEventListener("submit", event => {
+      event.preventDefault();
+      if (!$("#analysisForm").reportValidity()) return;
+      const record = collectForm();
+      const records = getRecords();
+      if (editingRecordId) {
+        record.id = editingRecordId;
+        const editIndex = records.findIndex(item => item.id === editingRecordId);
+        if (editIndex >= 0) records[editIndex] = record;
+        editingRecordId = null;
+      } else {
+        records.unshift(record);
+      }
+      record.analysisSnapshot = createAnalysisSnapshot(record);
+    setRecords(records);
+      activeRecord = record;
+      renderReport(record);
+      go("report");
+      $("#analysisForm").reset();
+      $("#analysisForm button[type=submit]").textContent = "결과 확인 및 기록 저장";
+      $("#rpe").value = 3;
+      $("#rpe").dispatchEvent(new Event("input"));
+      $("#differenceBox").classList.add("hidden");
+      $("#heartRate").disabled = false;
+      $("#vo2").disabled = false;
+      $("#age").value = localStorage.getItem("exint_saved_age_" + (currentCode || "guest")) || "";
+      $("#saveAge").checked = false;
+      showToast("오늘의 운동 기록을 저장했어요.");
+    });
+
+
+    function interpretRecord(record) {
+      const hasHR = record.heartRate !== null;
+      const hasVO2 = record.vo2 !== null;
+      const interval = record.exerciseType === "고강도 인터벌 운동";
+      const strength = record.exerciseType === "근력 운동" || record.purpose.includes("근력");
+      const aerobic = record.exerciseType === "유산소 운동";
+      let headline, primary, supporting, rationale, next;
+
+      if (interval) {
+        headline = "운동 구간별 반응을 함께 살펴보세요.";
+        primary = hasHR ? "구간별 심박수와 체감 강도" : "구간별 체감 강도";
+        supporting = hasHR ? "심박수는 운동·회복 구간을 나눠 기록하면 맥락을 더 잘 볼 수 있어요." : "심박수를 측정하지 않았으므로 체감 강도와 구간 메모를 중심으로 봅니다.";
+        rationale = "고강도 인터벌 운동은 운동 구간과 회복 구간이 번갈아 나타납니다. 한 번 입력한 심박수만으로는 각 구간의 반응을 구분하기 어렵기 때문에, 체감 강도와 운동 구조를 함께 보는 편이 적절합니다.";
+        next = "다음에는 운동·회복 구간의 시간과 심박수가 평균인지 최고치인지 메모해보세요. 다음 기록에서도 같은 구간끼리 비교하면 변화가 더 분명해집니다.";
+      } else if (strength) {
+        headline = "근력 운동의 부담은 체감과 수행 내용을 함께 봐야 해요.";
+        primary = "체감 강도와 세트·반복·중량";
+        supporting = hasHR ? "심박수는 전반적인 반응을 보는 보조 정보로 참고하세요." : "심박수는 측정하지 않았으므로 체감과 운동 수행 내용을 중심으로 봅니다.";
+        rationale = "근력 운동에서는 심박수 하나만으로 운동 중 느낀 부담이나 수행량을 모두 설명하기 어렵습니다. 선택한 체감 강도와 실제 운동 내용이 해석의 중심이 됩니다.";
+        next = "다음에는 메모에 주요 운동의 무게, 반복 횟수, 세트 수와 세트 사이 휴식 시간을 적어보세요. 비슷한 운동끼리 체감 강도와 수행 내용을 비교할 수 있습니다.";
+      } else if (aerobic) {
+        headline = "심폐 반응과 체감 강도를 나란히 살펴보세요.";
+        primary = hasHR && hasVO2 ? "심박수와 산소섭취량(VO₂)" : hasHR ? "심박수" : hasVO2 ? "산소섭취량(VO₂)" : "체감 강도";
+        supporting = "자각운동강도(RPE)는 측정값과 함께 운동 중 느낀 부담을 보여줍니다.";
+        rationale = "유산소 운동과 심폐능력 향상 목적에서는 심박수와 산소섭취량이 심폐 반응을 살펴보는 데 도움이 되고, 체감 강도는 사용자가 느낀 부담을 보완합니다. 어느 한 지표가 모든 운동 상황에서 우선한다고 단정하지 않습니다.";
+        next = "다음에는 운동 종류와 시간, 속도나 저항을 비슷하게 맞춰 기록해보세요. 심박수는 평균·최고 중 어떤 값인지, VO₂는 어떤 측정 조건에서 얻었는지 메모하면 기록 간 비교에 도움이 됩니다.";
+      } else {
+        headline = "운동 유형과 목적에 맞춰 지표를 함께 해석해보세요.";
+        primary = "체감 강도와 측정된 지표를 함께 비교";
+        supporting = "운동 유형이 복합·기타인 경우 한 가지 지표만으로 우선순위를 고정하기 어렵습니다.";
+        rationale = "운동 유형과 목적이 여러 요소를 포함하므로, 현재 기록만으로 단일 지표를 대표 지표로 정하지 않았습니다. 각 운동 구간에서 측정값과 체감이 어떻게 달랐는지 살펴보세요.";
+        next = "다음에는 메모를 운동 구간별로 나눠 적어보세요. 예를 들어 준비운동, 주요 운동, 마무리 운동의 체감과 측정값을 따로 기록하면 비교가 쉬워집니다.";
+      }
+
+      let comparison;
+      if (record.comparison === "비슷하게 느껴졌어요") {
+        comparison = "입력하신 응답에서는 측정값과 체감 강도가 비슷한 방향으로 느껴졌습니다. 이는 사용자의 체감 보고를 요약한 것으로, 두 지표가 같은 생리적 반응을 측정한다는 뜻은 아닙니다.";
+      } else {
+        comparison = "입력하신 응답에서는 체감 강도와 측정값 사이에 차이가 있었다고 느끼셨습니다. 선택하신 조건은 이번 기록에서 함께 나타난 항목입니다. 다음 운동에서 이 조건이 달랐을 때 측정값과 체감 강도도 함께 달라지는지 비교해 보세요.";
+      }
+const context = record.factors && record.factors.length
+      ? "사용자님은 " + record.factors.join(", 그리고 ") + " 항목을 선택하셨어요. 선택하신 내용은 운동 전 준비·회복이나 운동 환경과 관련된 조건이에요.\n\n같은 운동을 다시 기록할 때 해당 조건과 운동 시간을 함께 적어 두면, 체감이나 심박 반응이 어떤 날 달라지는지 비교하기 쉬워집니다."
+      : "이번 기록에서는 평소와 달랐던 조건을 선택하지 않으셨어요. 다음 기록에는 운동 환경이나 운동 전 회복 상태도 함께 적어 두면 기록을 비교할 때 참고할 수 있습니다.";
+      let limitations = hasHR
+        ? "심박수의 평균·최고 여부와 측정 시점이 입력되지 않아 심박수만으로 강도 구간을 판정하지 않았습니다."
+        : "심박수를 측정하지 않아 심박수 해석은 포함하지 않았습니다.";
+      if (hasVO2) limitations += " 산소섭취량은 측정 프로토콜과 비교 기준이 없으므로 이 한 번의 값만으로 높고 낮음을 판정하지 않았습니다.";
+      else limitations += " 산소섭취량은 측정되지 않아 분석에 포함하지 않았습니다.";
+      comparison = buildHeartRateInsight(record).relation;
+  next = buildHeartRateInsight(record).next;
+  rationale = hasHR && record.rpeLabel
+    ? buildHeartRateInsight(record).summary
+    : rationale;
+  return { headline, primary, supporting, rationale, next, comparison, context: buildContextInsight(record), limitations };
+    }
+
+    function chooseRecordVariant(record, key, variants) {
+  const seed = String(record.id || record.date || "record") + key;
+  let hash = 0;
+  for (let index = 0; index < seed.length; index++) {
+    hash = (hash * 31 + seed.charCodeAt(index)) >>> 0;
+  }
+  return variants[hash % variants.length];
+}
+
+function buildContextInsight(record) {
+  const factors = record.factors || [];
+  if (!factors.length) {
+    return "이번에는 평소와 달랐던 조건을 선택하지 않으셨어요. 다음 기록에서는 수면, 식사, 운동 전후 휴식처럼 기억하기 쉬운 조건을 적어두면 기록 간 차이를 읽는 데 도움이 됩니다.";
+  }
+  const joined = factors.join(" ");
+  let category, options;
+  if (/잠|식사|휴식|컨디션/.test(joined)) {
+    category = "준비와 회복";
+    options = [
+      "선택하신 항목은 운동 전 준비나 회복 상태에 관한 내용이에요. 다음에는 운동 종류와 시간을 비슷하게 맞추고, 이 조건이 달랐던 날과 심박수·체감 강도를 나란히 비교해 보세요.",
+      "이번 기록에서는 준비·회복과 관련된 조건을 체크하셨어요. 같은 운동을 다시 기록할 때 해당 조건과 운동 시간을 함께 적어 두면, 체감이나 심박 반응이 어떤 날 달라지는지 파악하기 쉬워집니다.",
+      "고르신 내용은 운동을 시작하기 전의 상태와 관련돼요. 다음 기록에서 이 상태가 비슷했는지 달랐는지 비교하면서, 심박수와 체감 강도가 함께 움직였는지 확인해 보세요."
+    ];
+  } else if (/익숙|조절|운동 중/.test(joined)) {
+    category = "운동 수행 방식";
+    options = [
+      "선택하신 항목은 운동에 대한 익숙함이나 진행 방식과 관련돼요. 다음에는 운동 구간·휴식·강도를 함께 적고, 비슷한 구성의 기록끼리 심박수와 체감 강도를 비교해 보세요.",
+      "이번에는 운동 중 수행 방식에 관한 조건을 선택하셨어요. 다음 기록에서 운동 강도나 휴식 방식이 달랐는지 남기면, 심박수 변화와 체감 강도의 차이를 더 구체적으로 살펴볼 수 있습니다.",
+      "고르신 내용은 운동을 어떻게 진행했는지에 대한 단서예요. 운동 시간과 구간 구성을 비슷하게 맞춘 기록을 모아 비교하면, 수행 방식이 달랐던 날의 반응을 확인하기 좋습니다."
+    ];
+  } else if (/음악|환경|응원|격려/.test(joined)) {
+    category = "주변 환경과 지원";
+    options = [
+      "선택하신 항목은 운동 당시 주변 환경이나 지원에 관한 내용이에요. 다음에는 환경이 비슷했던 날과 달랐던 날의 심박수·체감 강도를 비교해 보세요.",
+      "이번 기록에는 주변 환경 또는 다른 사람의 지원이 함께 적혀 있어요. 운동 종류와 시간을 비슷하게 유지한 채 환경이 달라진 기록을 모으면 반응 차이를 살펴보기 수월합니다.",
+      "고르신 내용은 운동할 때의 환경과 관련돼요. 다음 기록에도 이 조건을 남기고, 심박수와 체감 강도가 함께 달라지는지 확인해 보세요."
+    ];
+  } else {
+    category = "선택한 운동 조건";
+    options = [
+      "선택하신 조건을 다음 운동에서도 기록해 보세요. 운동 종류와 시간을 비슷하게 맞춘 뒤 조건이 달랐던 날의 심박수와 체감 강도를 비교하면 반복되는 양상을 찾는 데 도움이 됩니다.",
+      "이번에 체크한 조건을 다음 기록에서도 살펴보면 좋아요. 비슷한 운동끼리 모아 조건과 심박수·체감 강도를 함께 비교해 보세요.",
+      "고르신 항목은 다음 기록에서 다시 확인할 비교 기준이 됩니다. 운동 구성과 시간을 함께 기록해 두면 조건에 따른 반응을 더 쉽게 살펴볼 수 있어요."
+    ];
+  }
+  const detail = chooseRecordVariant(record, "context-" + category, options);
+const selectedText = factors.map(item => `‘${item}’`).join(", ");
+        return `사용자님은 ${selectedText}를 선택하셨어요. ${detail.replace(/([.!?]) 다음/g, "$1\n\n다음")}`;
+}
+
+function buildPerceptionRelation(record, heartRateBand) {
+  const response = record.comparison || "";
+  const rpe = record.rpeLabel ? `체감 강도는 “${record.rpeLabel}”로 선택하셨습니다. ` : "";
+  const band = heartRateBand ? `연령 기준 심박 참고 구간은 ${heartRateBand}입니다. ` : "";
+  if (response === "측정값보다 덜 힘들게 느껴졌어요") {
+    return `${band}${rpe}측정값보다 덜 힘들게 느꼈다고 응답하셨어요. 이번 기록에서는 심박 참고 구간과 주관적으로 보고한 부담이 같은 수준을 가리키지 않았고, 체감 부담은 측정값보다 낮게 기록됐습니다.`;
+  }
+  if (response === "측정값보다 더 힘들게 느껴졌어요") {
+    return `${band}${rpe}측정값보다 더 힘들게 느꼈다고 응답하셨어요. 이번 기록에서는 주관적으로 보고한 부담이 측정값보다 높았습니다. 심박 참고 구간과 함께 보면 심폐 반응과 체감 부담이 서로 다르게 나타난 기록입니다.`;
+  }
+  if (response === "비슷하게 느껴졌어요") {
+    return `${band}${rpe}측정값과 체감 강도가 비슷하게 느껴졌다고 응답하셨어요. 이번 기록에서는 본인이 느낀 부담과 측정 지표가 비슷한 방향으로 보고됐습니다.`;
+  }
+  return `${band}${rpe}측정값과 체감 강도의 차이 응답이 없어 두 값의 관계를 해석할 수 없습니다.`;
+}
+
+function buildVo2Insight(record) {
+  if (record.vo2 === null || record.vo2 === "" || !Number.isFinite(Number(record.vo2)) || Number(record.vo2) <= 0) return "";
+  const vo2 = Number(record.vo2);
+  const mets = vo2 / 3.5;
+  const band = mets < 3 ? "가벼운 강도" : mets < 6 ? "중강도" : "고강도";
+  return `입력한 산소섭취량 ${vo2.toFixed(1)} mL/kg/min은 약 ${mets.toFixed(1)} MET이며, 절대강도 기준 ${band} 범위입니다. 이 구분은 개인의 최대 산소섭취량을 반영한 상대 강도와 다를 수 있습니다.`;
+}
+
+function buildHeartRateInsight(record) {
+    const vo2Insight = buildVo2Insight(record);
+const heartRate = Number(record.heartRate);
+  const age = Number(record.age);
+  const hasHeartRate = record.heartRate !== null && Number.isFinite(heartRate) && heartRate > 0;
+  const hasAge = record.age !== null && record.age !== "" && Number.isFinite(age) && age > 0;
+  const exerciseTypeText = String(record.exerciseType || "");
+  const isInterval = exerciseTypeText.includes("인터벌") || (record.factors || []).some(factor => String(factor).includes("인터벌"));
+  const exerciseNote = exerciseTypeText.includes("근력")
+    ? "이번 기록은 근력 운동으로 입력하셨어요. 심박수는 세트나 휴식에 따라 달라질 수 있어 심폐 부담을 해석할 때 참고가 됩니다. 근력 운동 수행 강도를 살펴볼 때는 세트·반복 횟수와 RPE를 함께 보는 것이 도움이 돼요."
+    : isInterval
+      ? "이번 기록에는 고강도 인터벌 조건이 포함되어 있어요. 인터벌 운동은 고강도 구간과 회복 구간이 반복되므로, 평균 심박수만으로 각 구간의 반응을 모두 설명하기 어렵습니다. 구간별 심박수와 RPE를 함께 기록하면 운동 부담을 비교하는 데 도움이 됩니다."
+            : exerciseTypeText.includes("복합")
+        ? "이번 기록은 복합 운동으로 입력하셨어요. 여러 운동 요소가 함께 포함되어 있으므로, 심박수와 산소섭취량은 심폐 반응을 살펴보는 참고값으로, RPE는 운동 중 느낀 부담을 보여주는 자료로 운동 구성과 목적에 맞춰 함께 살펴보세요."
+        : "이번 기록은 유산소 운동으로 입력하셨어요. 심박수와 산소섭취량은 심폐 반응을 살펴보는 데 참고가 되고, RPE는 운동 중 느낀 부담을 함께 보여줍니다. 운동 목적과 기록 조건에 따라 각 지표가 설명해 주는 반응이 달라질 수 있어요.";
+if (!hasHeartRate) {
+      return { summary: [vo2Insight, "이번 기록에는 심박수가 입력되지 않아 심박수 해석은 포함하지 않았습니다."].filter(Boolean).join(" ") };
+  }
+  if (!hasAge) {
+      return { summary: [vo2Insight, `기록한 심박수 ${heartRate} bpm입니다. 나이를 입력하면 연령 기준 구간을 참고할 수 있습니다.`].filter(Boolean).join(" ") };
+  }
+  const estimatedMax = 220 - age;
+  const percent = Math.round((heartRate / estimatedMax) * 100);
+  const low = Math.round(estimatedMax * 0.5);
+  const moderate = Math.round(estimatedMax * 0.7);
+  const vigorous = Math.round(estimatedMax * 0.85);
+  let band, range;
+  if (percent < 50) { band = "낮은 강도 참고 범위"; range = `50% 미만 (약 ${Math.round(estimatedMax * 0.5)} bpm 미만)`; }
+  else if (percent < 70) { band = "중강도 참고 범위"; range = `${low}–${moderate} bpm`; }
+  else if (percent <= 85) { band = "고강도 참고 범위"; range = `${moderate + 1}–${vigorous} bpm`; }
+  else { band = "일반적인 고강도 목표 범위를 웃도는 값"; range = `${vigorous + 1} bpm 초과`; }
+  const perceived = record.rpeLabel ? `체감 강도는 “${record.rpeLabel}”로 선택하셨고, 설문 응답은 “${record.comparison || "차이 여부 미응답"}”입니다.` : "체감 강도 응답도 함께 살펴보세요.";
+    const reading = chooseRecordVariant(record, "heart-rate-reading", [
+    "이 수치는 이번 운동에서의 심박 반응을 보여주며, 체감 강도와 함께 보면 몸의 반응과 느낀 부담을 나란히 확인할 수 있습니다.",
+    "체감 강도 응답과 심박 구간이 서로 다른 정보를 보완해 줍니다. 같은 조건의 기록을 더 모으면 두 값이 어떤 상황에서 함께 또는 다르게 변하는지 살펴볼 수 있어요.",
+    "이번 기록은 심박 반응과 주관적으로 느낀 부담을 함께 담고 있습니다. 다음 기록과 비교하면 같은 운동에서 두 반응이 반복되는지 확인하는 데 도움이 됩니다."
+  ]);
+  const relation = buildPerceptionRelation(record, `${band} (${range})`);
+  return {
+    summary: `이번 기록 심박수 ${heartRate} bpm은 ${age}세 기준 추정 최대심박수 ${estimatedMax} bpm의 약 ${percent}%로, ${band}(${range})에 해당합니다. ${perceived} ${reading}${vo2Insight ? " " + vo2Insight : ""} ${exerciseNote}`,
+    relation,
+    next: `다음 기록도 운동 종류·시간·측정 시점을 비슷하게 맞춰 비교해 보세요. ${exerciseNote} 이 수치는 220−나이 추정식과 일반적인 성인 운동 강도 기준을 사용한 참고치입니다.`
+  };
+}
+
+function renderReport(record) {
+      activeRecord = record;
+      $("#reportDate").textContent = formatDate(record.date);
+      const hrText = record.heartRate == null ? "측정하지 않음" : record.heartRate + " bpm";
+      const vo2Text = record.vo2 == null ? "측정하지 않음" : record.vo2 + " ml/kg/min";
+      const factors = record.factors.length
+        ? '<ul>' + record.factors.map(item => '<li>' + escapeHTML(item) + '</li>').join("") + '</ul>'
+        : '<p class="muted">선택한 항목이 없습니다.</p>';
+      const memo = record.memo ? escapeHTML(record.memo).replace(/\n/g, "<br>") : "작성한 메모가 없습니다.";
+      const savedInterpretation = record.analysisSnapshot && record.analysisSnapshot.interpretation ? record.analysisSnapshot.interpretation : interpretRecord(record);
+    const interpretation = { ...savedInterpretation };
+    const vo2Insight = buildVo2Insight(record);
+    if (interpretation.rationale === "buildHeartRateInsight(record).summary") interpretation.rationale = buildHeartRateInsight(record).summary;
+    else if (vo2Insight && !(interpretation.rationale || "").includes(vo2Insight)) interpretation.rationale = (interpretation.rationale ? interpretation.rationale + " " : "") + vo2Insight;
+
+        const heartRateInsight = buildHeartRateInsight(record);
+  const contextInsight = buildContextInsight(record);
+$("#reportContent").innerHTML =
+        '<div class="result-banner">' +
+          '<div class="eyebrow">사용자 체감과 측정값의 관계</div>' +
+          '<div class="result-word">' + escapeHTML(record.comparison) + '</div>' +
+          '<p class="muted" style="margin:6px 0 0">선택하신 응답을 기준으로 기록했습니다. 이 선택만으로 원인이나 건강 상태를 판단하지 않습니다.</p>' +
+        '</div>' +
+
+'<div class="section-card" style="margin-top:18px">' +
+          '<div class="eyebrow">운동 맥락 분석</div>' +
+          '<h3 style="margin-top:8px">' + escapeHTML(interpretation.headline) + '</h3>' +
+          '<div class="report-section"><h3>측정값과 체감의 관계</h3><p class="muted">' + escapeHTML(interpretation.comparison) + '</p><p class="muted">' + escapeHTML(interpretation.context).replace(/\n\n/g, '</p><p class="muted">') + '</p></div>' +
+          '<div class="report-section"><h3>이 운동에서 우선 살펴볼 지표</h3><p><span class="tag">' + escapeHTML(interpretation.primary) + '</span></p><p class="muted">' + escapeHTML(interpretation.rationale) + '</p><p class="small muted">함께 볼 지표: ' + escapeHTML(interpretation.supporting) + '</p></div>' +
+          '<div class="report-section"><h3>다음 운동 때 참고할 점</h3><p class="muted">' + escapeHTML(interpretation.next) + '</p></div>' +
+          '<div class="notice small">' + escapeHTML(interpretation.limitations) + ' 해석은 참고용이며, 한 번의 기록으로 원인이나 건강 상태를 판정하지 않습니다.</div>' +
+        '</div>' +
+        '<div class="grid-3">' +
+          '<div class="metric"><span>운동 유형</span><strong>' + escapeHTML(record.exerciseType) + '</strong></div>' +
+          '<div class="metric"><span>운동 시간</span><strong>' + record.duration + '분</strong></div>' +
+          '<div class="metric"><span>체감 강도</span><strong>' + escapeHTML(record.rpeLabel) + '</strong></div>' +
+        '</div>' +
+        '<div class="section-card" style="margin-top:18px">' +
+          '<div class="report-section"><h3>입력한 측정값</h3><div class="grid-2">' +
+            '<div><span class="muted small">심박수</span><p><strong>' + escapeHTML(hrText) + '</strong></p></div>' +
+            '<div><span class="muted small">산소섭취량(VO₂)</span><p><strong>' + escapeHTML(vo2Text) + '</strong></p></div>' +
+          '</div>' +
+          (record.age ? '<p class="fine">심박수 참고 연령: ' + record.age + '세</p>' : '') +
+          '</div>' +
+          '<div class="report-section"><h3>운동 정보</h3><p><span class="tag">' + escapeHTML(record.purpose) + '</span></p>' +
+          '<p class="muted">운동 시간 ' + record.duration + '분</p></div>' +
+          '<div class="report-section"><h3>평소와 달랐던 점</h3>' + factors + '</div>' +
+          '<div class="report-section"><h3>오늘의 운동 메모</h3><p class="muted">' + memo + '</p></div>' +
+        '</div>' +
+        '<div class="notice">이 리포트는 사용자가 입력한 자료를 정리한 참고용 기록입니다. 의학적 평가나 운동 처방이 아닙니다.</div>';
+    }
+
+    function startEditingRecord(record) {
+      editingRecordId = record.id;
+      $("#exerciseType").value = record.exerciseType;
+      $("#purpose").value = record.purpose;
+      $("#duration").value = record.duration;
+      $("#memo").value = record.memo || "";
+      $("#noHeartRate").checked = !!record.noHeartRate;
+      $("#heartRate").disabled = !!record.noHeartRate;
+      $("#heartRate").value = record.heartRate ?? "";
+      $("#noVo2").checked = !!record.noVo2;
+      $("#vo2").disabled = !!record.noVo2;
+      $("#vo2").value = record.vo2 ?? "";
+      $("#age").value = record.age ?? "";
+      $("#saveAge").checked = false;
+      const levelIndex = rpeLevels.findIndex(level => level.borg === record.borg);
+      $("#rpe").value = levelIndex >= 0 ? levelIndex : 3;
+      $("#rpe").dispatchEvent(new Event("input"));
+      const comparisonInput = $$('input[name="comparison"]').find(input => input.value === record.comparison);
+      if (comparisonInput) {
+        comparisonInput.checked = true;
+        comparisonInput.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+      const factors = record.factors || [];
+      factors.forEach(factor => {
+        const value = factor.startsWith("기타: ") ? "기타" : factor;
+        const checkbox = $$('input[name="factor"]').find(input => input.value === value);
+        if (checkbox) checkbox.checked = true;
+      });
+      const other = factors.find(factor => factor.startsWith("기타: "));
+      $("#otherText").value = other ? other.slice(4) : "";
+      $("#otherBox").classList.toggle("hidden", !other);
+      $("#analysisForm button[type=submit]").textContent = "수정 내용 저장";
+      go("analysis");
+    }
+
+    $("#editRecord").addEventListener("click", () => {
+      if (activeRecord) startEditingRecord(activeRecord);
+    });
+
+    $("#deleteRecord").addEventListener("click", () => {
+      if (!activeRecord) return;
+      if (!window.confirm("정말 삭제하시겠습니까? 삭제한 기록은 복구할 수 없습니다.")) return;
+      setRecords(getRecords().filter(record => record.id !== activeRecord.id));
+      activeRecord = null;
+      renderHome();
+      go("records");
+      showToast("운동 기록을 삭제했어요.");
+    });
+
+    function renderHome() {
+      const records = getRecords();
+      const recent = records.slice(0, 2);
+      $("#recentHome").innerHTML = recent.length
+        ? recent.map(record =>
+          '<button class="record-item" data-record-id="' + escapeHTML(record.id) + '">' +
+            '<strong>' + escapeHTML(record.date) + ' · ' + escapeHTML(record.exerciseType) + '</strong>' +
+            '<div class="small muted">' + escapeHTML(record.comparison) + ' · ' + record.duration + '분</div>' +
+          '</button>'
+        ).join("")
+        : "아직 저장된 운동 기록이 없습니다.";
+      bindRecordButtons();
+    }
+
+    function bindRecordButtons() {
+      $$("[data-record-id]").forEach(button => {
+        button.addEventListener("click", () => {
+          const record = getRecords().find(item => item.id === button.dataset.recordId);
+          if (record) {
+            activeRecord = record;
+            renderReport(record);
+            go("report");
+          }
+        });
+      });
+    }
+
+    function renderRecords() {
+      renderCalendar();
+      const records = getRecords();
+      $("#recordList").innerHTML = records.length
+        ? records.map(record =>
+          '<button class="record-item" data-record-id="' + escapeHTML(record.id) + '">' +
+            '<div class="row between"><strong>' + escapeHTML(formatDate(record.date)) + '</strong><span class="tag">' +
+            (record.comparison === "비슷하게 느껴졌어요" ? "유사" : "차이") + '</span></div>' +
+            '<div class="small muted">' + escapeHTML(record.exerciseType) + ' · ' + record.duration + '분 · 체감 ' + escapeHTML(record.rpeLabel) + '</div>' +
+          '</button>'
+        ).join("")
+        : '<div class="empty">저장된 기록이 없습니다.<br>운동 분석을 완료하면 이곳에서 다시 볼 수 있어요.</div>';
+      bindRecordButtons();
+    }
+
+    function renderCalendar() {
+      const year = monthCursor.getFullYear();
+      const month = monthCursor.getMonth();
+      $("#monthLabel").textContent = year + "년 " + (month + 1) + "월";
+      const firstDay = new Date(year, month, 1).getDay();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const weekdays = ["일", "월", "화", "수", "목", "금", "토"];
+      const records = getRecords();
+      let html = weekdays.map(day => '<div class="day-name">' + day + '</div>').join("");
+      for (let i = 0; i < firstDay; i++) html += '<button class="day" disabled></button>';
+      for (let day = 1; day <= daysInMonth; day++) {
+        const date = year + "-" + String(month + 1).padStart(2, "0") + "-" + String(day).padStart(2, "0");
+        const dayRecords = records.filter(record => record.date === date);
+        const label = dayRecords.length
+          ? (dayRecords.some(record => record.comparison !== "비슷하게 느껴졌어요") ? "차이" : "유사")
+          : "";
+        html += '<button class="day" ' + (dayRecords.length ? 'data-date="' + date + '"' : 'disabled') + '>' +
+          '<span class="num">' + day + '</span>' +
+          (label ? '<span class="day-tag">' + label + (dayRecords.length > 1 ? ' +' + (dayRecords.length - 1) : '') + '</span>' : '') +
+          '</button>';
+      }
+      $("#calendar").innerHTML = html;
+      $$("[data-date]").forEach(button => button.addEventListener("click", () => {
+        const record = getRecords().find(item => item.date === button.dataset.date);
+        if (record) {
+          renderReport(record);
+          go("report");
+        }
+      }));
+    }
+
+    $("#prevMonth").addEventListener("click", () => {
+      monthCursor.setMonth(monthCursor.getMonth() - 1);
+      renderCalendar();
+    });
+    $("#nextMonth").addEventListener("click", () => {
+      monthCursor.setMonth(monthCursor.getMonth() + 1);
+      renderCalendar();
+    });
+
+    $("#age").value = localStorage.getItem("exint_saved_age_" + (currentCode || "guest")) || "";
+    renderHome();
+    renderRecords();
+  
+  function updateHeartRateReference() {
+ const ageInput = $("#age");
+ const rawAge = ageInput ? ageInput.value.trim() : "";
+ const age = Number(rawAge);
+ const empty = $("#hrReferenceEmpty");
+ const values = $("#hrReferenceValues");
+ if (!rawAge || !Number.isFinite(age) || age < 1 || age > 120) {
+  empty.classList.remove("hidden");
+  values.classList.add("hidden");
+  return;
+ }
+ const maxHr = 220 - age;
+ const low = Math.round(maxHr * 0.50);
+ const moderate = Math.round(maxHr * 0.70);
+ const high = Math.round(maxHr * 0.85);
+ $("#hrMaxValue").textContent = `${Math.round(maxHr)} bpm`;
+ $("#hrLowValue").textContent = `< ${low} bpm`;
+ $("#hrModerateValue").textContent = `${low}–${moderate} bpm`;
+ $("#hrHighValue").textContent = `${moderate}–${high} bpm`;
+ empty.classList.add("hidden");
+ values.classList.remove("hidden");
+}
+function updateVo2Reference() {
+  const input = $("#vo2");
+  const rawValue = input ? input.value.trim() : "";
+  const empty = $("#vo2ReferenceEmpty");
+  const values = $("#vo2ReferenceValues");
+  const reading = $("#vo2Reading");
+  const vo2 = Number(rawValue);
+  if (!rawValue || !Number.isFinite(vo2) || vo2 <= 0) {
+    empty.textContent = "산소섭취량을 입력하면 MET 기준의 절대강도를 표시합니다.";
+    empty.classList.remove("hidden");
+    values.classList.add("hidden");
+    reading.textContent = "MET 환산 기준: 가벼운 강도 3 미만, 중강도 3–5.9, 고강도 6 이상입니다.";
+    return;
+  }
+  const mets = vo2 / 3.5;
+  const band = mets < 3 ? "가벼운 강도" : mets < 6 ? "중강도" : "고강도";
+  empty.textContent = `현재 입력값 ${vo2.toFixed(1)} mL/kg/min · 약 ${mets.toFixed(1)} MET · ${band} 참고 범위`;
+  empty.classList.remove("hidden");
+  values.classList.remove("hidden");
+  reading.textContent = "절대강도 분류는 개인의 체력과 최대 산소섭취량을 반영하지 않는 참고치입니다.";
+}
+$("#vo2").addEventListener("input", updateVo2Reference);
+updateVo2Reference();
+$("#age").addEventListener("input", updateHeartRateReference);
+updateHeartRateReference();
+</script>
+</body>
+</html>
