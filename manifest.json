@@ -1,6 +1,7 @@
 {
   "name": "EX-INT",
   "short_name": "EX-INT",
+  "description": "운동 강도 분석 웹앱",
   "start_url": "/EX-INT/",
   "scope": "/EX-INT/",
   "display": "standalone",
